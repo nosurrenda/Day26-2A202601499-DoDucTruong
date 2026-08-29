@@ -9,7 +9,7 @@ day26-mcp/
 ├── README.md                ← Bạn đang đọc file này
 ├── requirements.txt         ← pip install -r requirements.txt
 │
-├── 01-function-calling/     ← Bước 1: Function Calling thuần (Gemini SDK)
+├── 01-function-calling/     ← Bước 1: Function Calling thuần (OpenRouter API)
 │   ├── README.md
 │   └── weather_function_calling.py
 │
@@ -36,8 +36,8 @@ pip install -r requirements.txt
 # MCP demo (không cần API key)
 cd 02-mcp-basics && python weather_client.py
 
-# Function Calling (cần Gemini API key)
-export GEMINI_API_KEY=...
+# Function Calling (cần OpenRouter API key)
+export OPENROUTER_API_KEY=sk-or-v1-...
 cd 01-function-calling && python weather_function_calling.py
 
 # Production — Auth (2 terminal)

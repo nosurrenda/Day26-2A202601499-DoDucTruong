@@ -49,9 +49,10 @@ uv run python weather.py
 ```bash
 cd mcp-client
 
-# Create .env file with your Google API key
-# Get free key from: https://aistudio.google.com/apikey
-echo "GOOGLE_API_KEY=your_google_api_key_here" > .env
+# Create .env file with your OpenRouter API key (or Google Gemini API key)
+echo "OPENROUTER_API_KEY=your_openrouter_api_key_here" > .env
+# Optionally customize model:
+# echo "OPENROUTER_MODEL=openrouter/google/gemini-2.5-flash" >> .env
 ```
 
 ### 3. Install Dependencies

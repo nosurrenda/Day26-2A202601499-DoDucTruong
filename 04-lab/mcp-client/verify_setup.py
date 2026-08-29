@@ -11,23 +11,28 @@ def check_environment():
     """Check if .env file exists and is configured"""
     print("🔍 Checking environment configuration...")
     
-    env_file = Path(".env")
+    env_file = Path(__file__).parent / ".env"
     if not env_file.exists():
-        print("❌ .env file not found")
-        print("   Run: echo 'GOOGLE_API_KEY=your_key' > .env")
-        return False
+        env_file = Path(".env")
     
-    # Check if GOOGLE_API_KEY is set
     from dotenv import load_dotenv
-    load_dotenv()
+    if env_file.exists():
+        load_dotenv(dotenv_path=env_file)
+    else:
+        load_dotenv()
     
-    api_key = os.getenv("GOOGLE_API_KEY")
-    if not api_key or api_key == "your_google_api_key_here":
-        print("❌ GOOGLE_API_KEY not configured in .env")
-        print("   Get key from: https://aistudio.google.com/apikey")
-        return False
+    openrouter_key = os.getenv("OPENROUTER_API_KEY") or os.getenv("OPENAI_API_KEY")
+    google_key = os.getenv("GOOGLE_API_KEY") or os.getenv("GEMINI_API_KEY")
     
-    print(f"✅ GOOGLE_API_KEY configured ({api_key[:10]}...)")
+    if openrouter_key and openrouter_key != "your_openrouter_api_key_here":
+        print(f"✅ OPENROUTER_API_KEY configured ({openrouter_key[:10]}...)")
+    elif google_key and google_key != "your_google_api_key_here":
+        print(f"✅ GOOGLE_API_KEY configured ({google_key[:10]}...)")
+    else:
+        print("⚠️  OPENROUTER_API_KEY / GOOGLE_API_KEY not configured in .env")
+        print("   To configure OpenRouter: echo 'OPENROUTER_API_KEY=your_key' > 04-lab/mcp-client/.env")
+        print("   To configure Gemini:     echo 'GOOGLE_API_KEY=your_key' > 04-lab/mcp-client/.env")
+    
     return True
 
 def check_dependencies():
@@ -36,7 +41,8 @@ def check_dependencies():
     
     required_packages = [
         ("google.adk", "Google ADK"),
-        ("google.generativeai", "Google Generative AI"),
+        ("openai", "OpenAI"),
+        ("litellm", "LiteLLM"),
         ("mcp", "MCP"),
         ("fastmcp", "FastMCP"),
         ("dotenv", "python-dotenv"),
@@ -62,18 +68,18 @@ def check_agent_structure():
     """Check if agent directory structure is correct"""
     print("\n🔍 Checking agent structure...")
     
+    base_dir = Path(__file__).parent
     required_files = [
-        "weather_agent/agent.py",
-        "weather_agent/__init__.py",
+        base_dir / "weather_agent/agent.py",
+        base_dir / "weather_agent/__init__.py",
     ]
     
     all_exist = True
-    for file_path in required_files:
-        path = Path(file_path)
+    for path in required_files:
         if path.exists():
-            print(f"✅ {file_path}")
+            print(f"✅ {path.relative_to(base_dir)}")
         else:
-            print(f"❌ {file_path} not found")
+            print(f"❌ {path.relative_to(base_dir)} not found")
             all_exist = False
     
     return all_exist
@@ -82,7 +88,7 @@ def check_mcp_server():
     """Check if MCP server is accessible"""
     print("\n🔍 Checking MCP server connectivity...")
     
-    server_url = "https://weather-mcp-server-oze7nwnjba-as.a.run.app"
+    server_url = os.getenv("MCP_SERVER_URL", "http://localhost:8085/mcp")
     
     try:
         import httpx
@@ -90,20 +96,21 @@ def check_mcp_server():
         
         async def test_connection():
             async with httpx.AsyncClient() as client:
-                response = await client.get(server_url, timeout=10.0)
+                response = await client.get(server_url, timeout=5.0)
                 return response.status_code
         
         status_code = asyncio.run(test_connection())
         
-        if status_code in [200, 404]:  # 404 is expected for GET on MCP endpoint
-            print(f"✅ MCP server reachable at {server_url}")
+        if status_code in [200, 404, 405, 406]:  # FastMCP HTTP endpoint returns 200, 404, 405 or 406 on plain GET
+            print(f"✅ MCP server reachable at {server_url} (HTTP {status_code})")
             return True
         else:
             print(f"⚠️  MCP server returned status {status_code}")
             return False
             
     except Exception as e:
-        print(f"❌ Cannot reach MCP server: {e}")
+        print(f"❌ Cannot reach MCP server ({server_url}): {e}")
+        print("   Start server with: cd 04-lab/mcp-server && python weather.py")
         return False
 
 def check_agent_import():
@@ -115,6 +122,7 @@ def check_agent_import():
         import warnings
         warnings.filterwarnings("ignore")
         
+        sys.path.insert(0, str(Path(__file__).parent))
         from weather_agent import root_agent
         print(f"✅ Agent imported successfully: {root_agent.name}")
         print(f"   Model: {root_agent.model}")
@@ -142,8 +150,8 @@ def main():
     if all(checks):
         print("✅ All checks passed!")
         print("\n🚀 Ready to start!")
-        print("   Run: ./start_agent.sh")
-        print("   Or:  uv run adk web")
+        print("   1. Start server: ./start_server.sh (or: python 04-lab/mcp-server/weather.py)")
+        print("   2. Start client: ./start_client.sh (or: adk web --directory 04-lab/mcp-client)")
         print("\n📍 Then open: http://localhost:8000")
         return 0
     else:

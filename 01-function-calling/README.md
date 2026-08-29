@@ -1,4 +1,4 @@
-# 01 — Function Calling thuần (Google Gemini SDK)
+# 01 — Function Calling thuần (OpenRouter API)
 
 Tool `get_weather` được **định nghĩa schema thủ công** và **thực thi ngay trong app**.
 Model chỉ quyết định gọi tool nào — app mới là nơi chạy.
@@ -17,7 +17,7 @@ User hỏi  →  Model quyết định gọi get_weather(city="Hà Nội")
 
 ```bash
 pip install -r ../requirements.txt
-export GEMINI_API_KEY=...
+export OPENROUTER_API_KEY=sk-or-v1-...
 python weather_function_calling.py
 ```
 
@@ -25,7 +25,7 @@ python weather_function_calling.py
 
 | File | Mô tả |
 |---|---|
-| `weather_function_calling.py` | Định nghĩa schema, thực thi tool, gọi model Gemini, xử lý vòng lặp function calling |
+| `weather_function_calling.py` | Định nghĩa schema JSON, thực thi tool, gọi OpenRouter API, xử lý vòng lặp function calling |
 
 ---
 
